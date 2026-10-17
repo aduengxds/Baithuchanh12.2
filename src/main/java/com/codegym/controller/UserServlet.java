@@ -1,3 +1,4 @@
+
 package com.codegym.controller;
 
 import com.codegym.dao.UserDAO;
@@ -38,6 +39,12 @@ public class UserServlet extends HttpServlet {
                 listUsers(request, response);
             } else {
                 switch (action) {
+                    case "search":
+                        searchUsers(request, response);
+                        break;
+                    case "sort":
+                        sortUsers(request, response);
+                        break;
                     case "create":
                         showCreateForm(request, response);
                         break;
@@ -54,7 +61,9 @@ public class UserServlet extends HttpServlet {
                 }
             }
         } catch (SQLException e) {
-            throw new ServletException("Lỗi khi truy cập cơ sở dữ liệu", e);
+            throw new ServletException(
+                    "Lỗi khi truy cập cơ sở dữ liệu", e
+            );
         }
     }
 
@@ -69,7 +78,9 @@ public class UserServlet extends HttpServlet {
 
         try {
             if (action == null) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST
+                );
                 return;
             }
 
@@ -89,10 +100,13 @@ public class UserServlet extends HttpServlet {
                     );
             }
         } catch (SQLException e) {
-            throw new ServletException("Lỗi khi thao tác với cơ sở dữ liệu", e);
+            throw new ServletException(
+                    "Lỗi khi thao tác với cơ sở dữ liệu", e
+            );
         }
     }
 
+    // Hiển thị toàn bộ danh sách người dùng
     private void listUsers(
             HttpServletRequest request,
             HttpServletResponse response
@@ -105,6 +119,41 @@ public class UserServlet extends HttpServlet {
                 .forward(request, response);
     }
 
+    // Tìm kiếm người dùng theo quốc gia
+    private void searchUsers(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws SQLException, ServletException, IOException {
+
+        String country = request.getParameter("country");
+
+        if (country == null) {
+            country = "";
+        }
+
+        List<User> users = userDAO.searchByCountry(country);
+
+        request.setAttribute("country", country);
+        request.setAttribute("users", users);
+
+        request.getRequestDispatcher("/user/list.jsp")
+                .forward(request, response);
+    }
+
+    // Sắp xếp người dùng theo tên A-Z
+    private void sortUsers(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws SQLException, ServletException, IOException {
+
+        List<User> users = userDAO.sortByName();
+        request.setAttribute("users", users);
+
+        request.getRequestDispatcher("/user/list.jsp")
+                .forward(request, response);
+    }
+
+    // Hiển thị form thêm người dùng
     private void showCreateForm(
             HttpServletRequest request,
             HttpServletResponse response
@@ -114,6 +163,7 @@ public class UserServlet extends HttpServlet {
                 .forward(request, response);
     }
 
+    // Hiển thị form sửa người dùng
     private void showEditForm(
             HttpServletRequest request,
             HttpServletResponse response
@@ -127,8 +177,10 @@ public class UserServlet extends HttpServlet {
         User user = userDAO.selectUser(id);
 
         if (user == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                    "Không tìm thấy người dùng.");
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Không tìm thấy người dùng."
+            );
             return;
         }
 
@@ -137,6 +189,7 @@ public class UserServlet extends HttpServlet {
                 .forward(request, response);
     }
 
+    // Hiển thị form xác nhận xóa
     private void showDeleteForm(
             HttpServletRequest request,
             HttpServletResponse response
@@ -150,8 +203,10 @@ public class UserServlet extends HttpServlet {
         User user = userDAO.selectUser(id);
 
         if (user == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                    "Không tìm thấy người dùng.");
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Không tìm thấy người dùng."
+            );
             return;
         }
 
@@ -160,6 +215,7 @@ public class UserServlet extends HttpServlet {
                 .forward(request, response);
     }
 
+    // Thêm người dùng
     private void insertUser(
             HttpServletRequest request,
             HttpServletResponse response
@@ -175,6 +231,7 @@ public class UserServlet extends HttpServlet {
         redirectToList(request, response);
     }
 
+    // Cập nhật người dùng
     private void updateUser(
             HttpServletRequest request,
             HttpServletResponse response
@@ -196,6 +253,7 @@ public class UserServlet extends HttpServlet {
         redirectToList(request, response);
     }
 
+    // Xóa người dùng
     private void deleteUser(
             HttpServletRequest request,
             HttpServletResponse response
@@ -210,6 +268,7 @@ public class UserServlet extends HttpServlet {
         redirectToList(request, response);
     }
 
+    // Kiểm tra ID đầu vào
     private int parseId(
             HttpServletRequest request,
             HttpServletResponse response
@@ -236,11 +295,14 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    // Quay về danh sách sau khi thêm, sửa hoặc xóa
     private void redirectToList(
             HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
 
-        response.sendRedirect(request.getContextPath() + "/users");
+        response.sendRedirect(
+                request.getContextPath() + "/users"
+        );
     }
 }

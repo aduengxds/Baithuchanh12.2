@@ -1,3 +1,4 @@
+
 package com.codegym.dao;
 
 import com.codegym.model.User;
@@ -34,6 +35,14 @@ public class UserDAO implements IUserDAO {
 
     private static final String UPDATE_USER =
             "UPDATE users SET name = ?, email = ?, country = ? WHERE id = ?";
+
+    private static final String SEARCH_BY_COUNTRY =
+            "SELECT id, name, email, country FROM users "
+            + "WHERE country LIKE ? ORDER BY id";
+
+    private static final String SORT_BY_NAME =
+            "SELECT id, name, email, country FROM users "
+            + "ORDER BY name ASC";
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(
@@ -124,5 +133,52 @@ public class UserDAO implements IUserDAO {
 
             return statement.executeUpdate() > 0;
         }
+    }
+
+    // Tìm kiếm người dùng theo quốc gia
+    public List<User> searchByCountry(String country) throws SQLException {
+        List<User> users = new ArrayList<>();
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(SEARCH_BY_COUNTRY)) {
+
+            statement.setString(1, "%" + country + "%");
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    users.add(new User(
+                            resultSet.getInt("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("email"),
+                            resultSet.getString("country")
+                    ));
+                }
+            }
+        }
+
+        return users;
+    }
+
+    // Sắp xếp người dùng theo tên A-Z
+    public List<User> sortByName() throws SQLException {
+        List<User> users = new ArrayList<>();
+
+        try (Connection connection = getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(SORT_BY_NAME);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                users.add(new User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("email"),
+                        resultSet.getString("country")
+                ));
+            }
+        }
+
+        return users;
     }
 }
